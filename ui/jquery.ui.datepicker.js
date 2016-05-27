@@ -539,7 +539,7 @@ $.extend(Datepicker.prototype, {
 	 */
 	_getDateDatepicker: function(target, noDefault) {
 		var inst = this._getInst(target);
-		if (inst && !inst.inline) {
+		if (inst && !inst.inline && ! $(target).prop("readonly")) {
 			this._setDateFromField(inst, noDefault);
 		}
 		return (inst ? this._getDate(inst) : null);
