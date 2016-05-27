@@ -356,6 +356,9 @@ $.extend(Datepicker.prototype, {
 		} else if (nodeName === "div" || nodeName === "span") {
 			$target.removeClass(this.markerClassName).empty();
 		}
+	    //Zap Sergey - Leaks fix
+		instActive = undefined;
+		$.datepicker._curInst = undefined;
 	},
 
 	/* Enable the date picker to a jQuery selection.
