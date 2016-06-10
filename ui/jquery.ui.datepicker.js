@@ -667,7 +667,9 @@ $.extend(Datepicker.prototype, {
 					$.datepicker._getFormatConfig(inst));
 
 				if (date) { // only if valid
-					$.datepicker._setDateFromField(inst);
+				    if (!$(event.target).prop("readonly")) {
+				        $.datepicker._setDateFromField(inst);
+				    }
 					$.datepicker._updateAlternate(inst);
 					$.datepicker._updateDatepicker(inst);
 				}
@@ -713,7 +715,9 @@ $.extend(Datepicker.prototype, {
 
 		inst.lastVal = null;
 		$.datepicker._lastInput = input;
-		$.datepicker._setDateFromField(inst);
+		if (!$(input).prop("readonly")) {
+		    $.datepicker._setDateFromField(inst);
+		}
 
 		if ($.datepicker._inDialog) { // hide cursor
 			input.value = "";
