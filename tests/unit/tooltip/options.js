@@ -1,10 +1,13 @@
 define( [
 	"qunit",
 	"jquery",
+	"./helper",
 	"ui/widgets/tooltip"
-], function( QUnit, $ ) {
+], function( QUnit, $, testHelper ) {
 
-QUnit.module( "tooltip: options" );
+var beforeAfterEach = testHelper.beforeAfterEach;
+
+QUnit.module( "tooltip: options", beforeAfterEach() );
 
 QUnit.test( "disabled: true", function( assert ) {
 	assert.expect( 1 );
@@ -203,8 +206,16 @@ QUnit.test( "track + show delay", function( assert ) {
 	event.pageY = topVal;
 	element.trigger( event );
 
-	assert.equal( $( ".ui-tooltip" ).css( "left" ), leftVal + offsetVal + "px" );
-	assert.equal( $( ".ui-tooltip" ).css( "top" ), topVal + offsetVal + "px" );
+	assert.close(
+		parseFloat( $( ".ui-tooltip" ).css( "left" ) ),
+		leftVal + offsetVal, 0.5,
+		"left position"
+	);
+	assert.close(
+		parseFloat( $( ".ui-tooltip" ).css( "top" ) ),
+		topVal + offsetVal, 0.5,
+		"top position"
+	);
 } );
 
 QUnit.test( "track and programmatic focus", function( assert ) {

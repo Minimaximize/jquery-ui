@@ -103,8 +103,6 @@ $.widget( "ui.draggable", $.ui.mouse, {
 	_mouseCapture: function( event ) {
 		var o = this.options;
 
-		this._blurActiveElement( event );
-
 		// Among others, prevent a drag on a resizable-handle
 		if ( this.helper || o.disabled ||
 				$( event.target ).closest( ".ui-resizable-handle" ).length > 0 ) {
@@ -116,6 +114,8 @@ $.widget( "ui.draggable", $.ui.mouse, {
 		if ( !this.handle ) {
 			return false;
 		}
+
+		this._blurActiveElement( event );
 
 		this._blockFrames( o.iframeFix === true ? "iframe" : o.iframeFix );
 
@@ -147,11 +147,10 @@ $.widget( "ui.draggable", $.ui.mouse, {
 		var activeElement = $.ui.safeActiveElement( this.document[ 0 ] ),
 			target = $( event.target );
 
-		// Only blur if the event occurred on an element that is:
-		// 1) within the draggable handle
-		// 2) but not within the currently focused element
+		// Don't blur if the event occurred on an element that is within
+		// the currently focused element
 		// See #10527, #12472
-		if ( this._getHandle( event ) && target.closest( activeElement ).length ) {
+		if ( target.closest( activeElement ).length ) {
 			return;
 		}
 
@@ -297,7 +296,7 @@ $.widget( "ui.draggable", $.ui.mouse, {
 
 		if ( ( this.options.revert === "invalid" && !dropped ) ||
 				( this.options.revert === "valid" && dropped ) ||
-				this.options.revert === true || ( $.isFunction( this.options.revert ) &&
+				this.options.revert === true || ( typeof this.options.revert === "function" &&
 				this.options.revert.call( this.element, dropped ) )
 		) {
 			$( this.helper ).animate(
@@ -369,7 +368,7 @@ $.widget( "ui.draggable", $.ui.mouse, {
 	_createHelper: function( event ) {
 
 		var o = this.options,
-			helperIsFunction = $.isFunction( o.helper ),
+			helperIsFunction = typeof o.helper === "function",
 			helper = helperIsFunction ?
 				$( o.helper.apply( this.element[ 0 ], [ event ] ) ) :
 				( o.helper === "clone" ?
@@ -408,7 +407,7 @@ $.widget( "ui.draggable", $.ui.mouse, {
 		if ( typeof obj === "string" ) {
 			obj = obj.split( " " );
 		}
-		if ( $.isArray( obj ) ) {
+		if ( Array.isArray( obj ) ) {
 			obj = { left: +obj[ 0 ], top: +obj[ 1 ] || 0 };
 		}
 		if ( "left" in obj ) {

@@ -116,10 +116,9 @@ a.ui-button:active,
 	font-weight: normal/*{fwDefault}*/;
 	color: #ffffff/*{fcActive}*/;
 }
-.ui-icon-background,
-.ui-state-active .ui-icon-background {
-	border: #003eff/*{borderColorActive}*/;
-	background-color: #ffffff/*{fcActive}*/;
+.ui-icon-background {
+	border: #dddddd/*{borderColorContent}*/;
+	background-color: #ffffff/*{bgColorContent}*/;
 }
 .ui-state-active a,
 .ui-state-active a:link,
@@ -197,14 +196,10 @@ a.ui-button:active,
 .ui-widget-header .ui-icon {
 	background-image: url("images/ui-icons_444444_256x240.png")/*{iconsHeader}*/;
 }
-.ui-button .ui-icon {
-	background-image: url("images/ui-icons_777777_256x240.png")/*{iconsDefault}*/;
-}
 .ui-state-hover .ui-icon,
 .ui-state-focus .ui-icon,
 .ui-button:hover .ui-icon,
-.ui-button:focus .ui-icon,
-.ui-state-default .ui-icon {
+.ui-button:focus .ui-icon {
 	background-image: url("images/ui-icons_555555_256x240.png")/*{iconsHover}*/;
 }
 .ui-state-active .ui-icon,
@@ -219,9 +214,13 @@ a.ui-button:active,
 .ui-state-error-text .ui-icon {
 	background-image: url("images/ui-icons_cc0000_256x240.png")/*{iconsError}*/;
 }
+.ui-button .ui-icon,
+.ui-state-default .ui-icon {
+	background-image: url("images/ui-icons_777777_256x240.png")/*{iconsDefault}*/;
+}
 
 /* positioning */
-.ui-icon-blank { background-position: 16px 16px; }
+html .ui-icon-blank { background-image: none; }
 .ui-icon-caret-1-n { background-position: 0 0; }
 .ui-icon-caret-1-ne { background-position: -16px 0; }
 .ui-icon-caret-1-e { background-position: -32px 0; }

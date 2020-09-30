@@ -4,26 +4,35 @@ module.exports = function( grunt ) {
 
 var versions = {
 		"git": "git",
-		"2.2": "2.2.0 2.2.1 2.2.2 2.2.3 2.2.4",
-		"2.1": "2.1.0 2.1.1 2.1.2 2.1.3 2.1.4",
-		"2.0": "2.0.0 2.0.1 2.0.3",
-		"1.12": "1.12.0 1.12.1 1.12.2 1.12.3 1.12.4",
-		"1.11": "1.11.0 1.11.1 1.11.2 1.11.3",
-		"1.10": "1.10.0 1.10.2",
-		"1.9": "1.9.0 1.9.1",
-		"1.8": "1.8.0 1.8.1 1.8.2 1.8.3",
-		"1.7": "1.7.0 1.7.1 1.7.2"
+		"3.x-git": "3.x-git",
+		"3.5": "3.5.1",
+		"3.4": "3.4.1",
+		"3.3": "3.3.1",
+		"3.2": "3.2.1",
+		"3.1": "3.1.1",
+		"3.0": "3.0.0",
+		"2.2": "2.2.4",
+		"2.1": "2.1.4",
+		"2.0": "2.0.3",
+		"1.12": "1.12.4",
+		"1.11": "1.11.3",
+		"1.10": "1.10.2",
+		"1.9": "1.9.1",
+		"1.8": "1.8.3"
 	},
 	tests = {
 		"Accordion": "accordion/accordion.html",
 		"Autocomplete": "autocomplete/autocomplete.html",
 		"Button": "button/button.html",
+		"Checkboxradio": "checkboxradio/checkboxradio.html",
+		"Controlgroup": "controlgroup/controlgroup.html",
 		"Core": "core/core.html",
 		"Datepicker": "datepicker/datepicker.html",
 		"Dialog": "dialog/dialog.html",
 		"Draggable": "draggable/draggable.html",
 		"Droppable": "droppable/droppable.html",
 		"Effects": "effects/effects.html",
+		"Form Reset Mixin": "form-reset-mixin/form-reset-mixin.html",
 		"Menu": "menu/menu.html",
 		"Position": "position/position.html",
 		"Progressbar": "progressbar/progressbar.html",
@@ -38,20 +47,20 @@ var versions = {
 		"Widget": "widget/widget.html"
 	};
 
-function submit( commit, runs, configFile, extra, done ) {
+function submit( commit, runs, configFile, browserSets, extra, done ) {
 	var testName,
 		testswarm = require( "testswarm" ),
 		config = grunt.file.readJSON( configFile ).jqueryui,
-		browserSets = config.browserSets,
 		commitUrl = "https://github.com/jquery/jquery-ui/commit/" + commit;
 
+	browserSets = browserSets || config.browserSets;
+	if ( browserSets[ 0 ] === "[" ) {
+
+		// We got an array, parse it
+		browserSets = JSON.parse( browserSets );
+	}
+
 	if ( extra ) {
-
-		// jQuery >= 2.0.0 don't support IE 8.
-		if ( extra.substring( 0, 6 ) !== "core 1" ) {
-			browserSets = "jquery-ui-future";
-		}
-
 		extra = " (" + extra + ")";
 	}
 
@@ -81,23 +90,23 @@ function submit( commit, runs, configFile, extra, done ) {
 		} );
 }
 
-grunt.registerTask( "testswarm", function( commit, configFile ) {
+grunt.registerTask( "testswarm", function( commit, configFile, browserSets ) {
 	var test,
 		latestTests = {};
 	for ( test in tests ) {
 		latestTests[ test ] = tests[ test ] + "?nojshint=true";
 	}
-	submit( commit, latestTests, configFile, "", this.async() );
+	submit( commit, latestTests, configFile, browserSets, "", this.async() );
 } );
 
-grunt.registerTask( "testswarm-multi-jquery", function( commit, configFile, minor ) {
+grunt.registerTask( "testswarm-multi-jquery", function( commit, configFile, minor, browserSets ) {
 	var allTests = {};
 	versions[ minor ].split( " " ).forEach( function( version ) {
 		for ( var test in tests ) {
 			allTests[ test + "-" + version ] = tests[ test ] + "?nojshint=true&jquery=" + version;
 		}
 	} );
-	submit( commit, allTests, configFile, "core " + minor, this.async() );
+	submit( commit, allTests, configFile, browserSets, "core " + minor, this.async() );
 } );
 
 };

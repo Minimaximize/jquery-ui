@@ -1,8 +1,9 @@
 define( [
 	"qunit",
 	"jquery",
+	"lib/helper",
 	"ui/widgets/slider"
-], function( QUnit, $ ) {
+], function( QUnit, $, helper ) {
 
 var element, options;
 
@@ -11,7 +12,7 @@ function handle() {
 }
 
 // Slider Tests
-QUnit.module( "slider: core" );
+QUnit.module( "slider: core", { afterEach: helper.moduleAfterEach }  );
 
 QUnit.test( "markup structure", function( assert ) {
 	assert.expect( 4 );
@@ -23,6 +24,18 @@ QUnit.test( "markup structure", function( assert ) {
 	assert.hasClasses( range, "ui-slider-range ui-widget-header" );
 	assert.hasClasses( handle[ 0 ], "ui-slider-handle" );
 	assert.hasClasses( handle[ 1 ], "ui-slider-handle" );
+} );
+
+QUnit.test( "custom handle", function( assert ) {
+	assert.expect( 3 );
+
+	var element = $( "#slider-custom-handle" ).slider();
+	var customHandle = $( ".custom-handle" );
+	var sliderHandles = element.find( ".ui-slider-handle" );
+
+	assert.equal( sliderHandles.length, 1, "Only one handle" );
+	assert.strictEqual( sliderHandles[ 0 ], customHandle[ 0 ], "Correct handle" );
+	assert.equal( customHandle.attr( "tabIndex" ), 0, "tabIndex" );
 } );
 
 QUnit.test( "keydown HOME on handle sets value to min", function( assert ) {

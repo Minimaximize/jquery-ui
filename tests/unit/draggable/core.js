@@ -1,13 +1,14 @@
 define( [
 	"qunit",
 	"jquery",
+	"lib/helper",
 	"./helper",
 	"ui/widgets/draggable",
 	"ui/widgets/droppable",
 	"ui/widgets/resizable"
-], function( QUnit, $, testHelper ) {
+], function( QUnit, $, helper, testHelper ) {
 
-QUnit.module( "draggable: core" );
+QUnit.module( "draggable: core", { afterEach: helper.moduleAfterEach }  );
 
 QUnit.test( "element types", function( assert ) {
 	var typeNames = (
@@ -334,6 +335,36 @@ QUnit.test( "blur behavior - descendant of handle", function( assert ) {
 
 		// Elements outside of the handle should blur (#12472, #14905)
 		assert.notStrictEqual( document.activeElement, focusElement.get( 0 ), "test element is no longer focused after mousing down on a draggable" );
+		ready();
+	} );
+} );
+
+QUnit.test( "blur behavior - off handle", function( assert ) {
+	var ready = assert.async();
+	assert.expect( 3 );
+
+	var element = $( "#draggable2" ).draggable( { handle: "span" } ),
+		focusElement = $( "<div tabindex='1'></div>" ).appendTo( element );
+
+	// Mock $.ui.safeBlur with a spy
+	var _safeBlur = $.ui.safeBlur;
+	var blurCalledCount = 0;
+	$.ui.safeBlur = function() {
+		blurCalledCount++;
+	};
+
+	testHelper.onFocus( focusElement, function() {
+		assert.strictEqual( document.activeElement, focusElement.get( 0 ), "test element is focused before mousing down on a draggable" );
+
+		testHelper.move( element, 1, 1 );
+		assert.strictEqual( blurCalledCount, 0, "draggable doesn't blur when mousing down off handle" );
+
+		testHelper.move( element.find( "span" ), 1, 1 );
+		assert.strictEqual( blurCalledCount, 1, "draggable blurs when mousing down on handle" );
+
+		// Restore safeBlur
+		$.ui.safeBlur = _safeBlur;
+
 		ready();
 	} );
 } );

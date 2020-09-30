@@ -109,6 +109,8 @@ return $.widget( "ui.controlgroup", {
 			// first / last elements until all enhancments are done.
 			if ( that[ "_" + widget + "Options" ] ) {
 				options = that[ "_" + widget + "Options" ]( "middle" );
+			} else {
+				options = { classes: {} };
 			}
 
 			// Find instances of this widget inside controlgroup and init them
@@ -118,14 +120,25 @@ return $.widget( "ui.controlgroup", {
 					var element = $( this );
 					var instance = element[ widget ]( "instance" );
 
+					// We need to clone the default options for this type of widget to avoid
+					// polluting the variable options which has a wider scope than a single widget.
+					var instanceOptions = $.widget.extend( {}, options );
+
 					// If the button is the child of a spinner ignore it
+					// TODO: Find a more generic solution
 					if ( widget === "button" && element.parent( ".ui-spinner" ).length ) {
 						return;
 					}
-					if ( instance ) {
-						options.classes = that._resolveClassesValues( options.classes, instance );
+
+					// Create the widget if it doesn't exist
+					if ( !instance ) {
+						instance = element[ widget ]()[ widget ]( "instance" );
 					}
-					element[ widget ]( options );
+					if ( instance ) {
+						instanceOptions.classes =
+							that._resolveClassesValues( instanceOptions.classes, instance );
+					}
+					element[ widget ]( instanceOptions );
 
 					// Store an instance of the controlgroup to be able to reference
 					// from the outermost element for changing options and refresh
@@ -137,7 +150,7 @@ return $.widget( "ui.controlgroup", {
 				} );
 		} );
 
-		this.childWidgets = $( $.unique( childWidgets ) );
+		this.childWidgets = $( $.uniqueSort( childWidgets ) );
 		this._addClass( this.childWidgets, "ui-controlgroup-item" );
 	},
 
@@ -152,7 +165,7 @@ return $.widget( "ui.controlgroup", {
 	},
 
 	_updateCornerClass: function( element, position ) {
-		var remove = "ui-corner-top ui-corner-bottom ui-corner-left ui-corner-right";
+		var remove = "ui-corner-top ui-corner-bottom ui-corner-left ui-corner-right ui-corner-all";
 		var add = this._buildSimpleOptions( position, "label" ).classes.label;
 
 		this._removeClass( element, null, remove );
@@ -167,7 +180,8 @@ return $.widget( "ui.controlgroup", {
 		result.classes[ key ] = {
 			"middle": "",
 			"first": "ui-corner-" + ( direction ? "top" : "left" ),
-			"last": "ui-corner-" + ( direction ? "bottom" : "right" )
+			"last": "ui-corner-" + ( direction ? "bottom" : "right" ),
+			"only": "ui-corner-all"
 		}[ position ];
 
 		return result;
@@ -206,6 +220,10 @@ return $.widget( "ui.controlgroup", {
 				last: {
 					"ui-selectmenu-button-open": direction ? "" : "ui-corner-tr",
 					"ui-selectmenu-button-closed": "ui-corner-" + ( direction ? "bottom" : "right" )
+				},
+				only: {
+					"ui-selectmenu-button-open": "ui-corner-top",
+					"ui-selectmenu-button-closed": "ui-corner-all"
 				}
 
 			}[ position ]
@@ -213,12 +231,13 @@ return $.widget( "ui.controlgroup", {
 	},
 
 	_resolveClassesValues: function( classes, instance ) {
+		var result = {};
 		$.each( classes, function( key ) {
 			var current = instance.options.classes[ key ] || "";
-			current = current.replace( controlgroupCornerRegex, "" ).trim();
-			classes[ key ] = ( current + " " + classes[ key ] ).replace( /\s+/g, " " );
+			current = String.prototype.trim.call( current.replace( controlgroupCornerRegex, "" ) );
+			result[ key ] = ( current + " " + classes[ key ] ).replace( /\s+/g, " " );
 		} );
-		return classes;
+		return result;
 	},
 
 	_setOption: function( key, value ) {
@@ -261,7 +280,9 @@ return $.widget( "ui.controlgroup", {
 				var instance = children[ value ]().data( "ui-controlgroup-data" );
 
 				if ( instance && that[ "_" + instance.widgetName + "Options" ] ) {
-					var options = that[ "_" + instance.widgetName + "Options" ]( value );
+					var options = that[ "_" + instance.widgetName + "Options" ](
+						children.length === 1 ? "only" : value
+					);
 					options.classes = that._resolveClassesValues( options.classes, instance );
 					instance.element[ instance.widgetName ]( options );
 				} else {

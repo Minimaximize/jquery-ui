@@ -1,10 +1,11 @@
 define( [
 	"qunit",
 	"jquery",
+	"lib/helper",
 	"ui/widgets/checkboxradio"
-], function( QUnit, $ ) {
+], function( QUnit, $, helper ) {
 
-QUnit.module( "Checkboxradio: options" );
+QUnit.module( "Checkboxradio: options", { afterEach: helper.moduleAfterEach }  );
 
 function assertDisabled( checkbox, assert ) {
 	assert.hasClasses( checkbox.checkboxradio( "widget" ), "ui-state-disabled",
@@ -72,7 +73,7 @@ function assertIcon( checkbox, icon, assert ) {
 		"ui-icon-background ui-icon-" + icon,
 		"Icon has proper classes" );
 	if ( icon === "blank" ) {
-		assert.lacksClasses( iconElement, "ui-icon-check ui-state-highlight" );
+		assert.lacksClasses( iconElement, "ui-icon-check ui-state-checked" );
 	}
 }
 
@@ -100,7 +101,7 @@ QUnit.test( "icon - default checked", function( assert ) {
 	assert.expect( 2 );
 
 	checkbox.checkboxradio();
-	assertIcon( checkbox, "check ui-state-highlight", assert );
+	assertIcon( checkbox, "check ui-state-checked", assert );
 } );
 
 QUnit.test( "icon", function( assert ) {
@@ -111,13 +112,13 @@ QUnit.test( "icon", function( assert ) {
 	checkbox.prop( "checked", true );
 
 	checkbox.checkboxradio();
-	assertIcon( checkbox, "check ui-state-highlight", assert );
+	assertIcon( checkbox, "check ui-state-checked", assert );
 
 	checkbox.checkboxradio( "option", "icon", false );
 	assertNoIcon( assert, checkbox );
 
 	checkbox.checkboxradio( "option", "icon", true );
-	assertIcon( checkbox, "check ui-state-highlight", assert );
+	assertIcon( checkbox, "check ui-state-checked", assert );
 
 	checkbox.checkboxradio( "option", "icon", false );
 	assertNoIcon( assert, checkbox );
@@ -137,7 +138,7 @@ QUnit.test( "label - default", function( assert ) {
 	widget = checkbox.checkboxradio( "widget" );
 	assert.strictEqual( checkbox.checkboxradio( "option", "label" ),
 		"checkbox label", "When no value passed on create text from dom is used for option" );
-	assert.strictEqual( $.trim( widget.text() ),
+	assert.strictEqual( String.prototype.trim.call( widget.text() ),
 		"checkbox label", "When no value passed on create text from dom is used in dom" );
 } );
 
@@ -152,7 +153,7 @@ QUnit.test( "label - explicit value", function( assert ) {
 
 	assert.strictEqual( checkbox.checkboxradio( "option", "label" ),
 		"foo", "When value is passed on create value is used for option" );
-	assert.strictEqual( $.trim( widget.text() ),
+	assert.strictEqual( String.prototype.trim.call( widget.text() ),
 		"foo", "When value is passed on create value is used in dom" );
 	assert.strictEqual( icon.length, 1,
 		"Icon is preserved when label is set on init when wrapped in label" );
@@ -177,7 +178,7 @@ QUnit.test( "label - explicit null value", function( assert ) {
 	widget = checkbox.checkboxradio( "widget" );
 	assert.strictEqual( checkbox.checkboxradio( "option", "label" ),
 		"checkbox label", "When null is passed on create text from dom is used for option" );
-	assert.strictEqual( $.trim( widget.text() ),
+	assert.strictEqual( String.prototype.trim.call( widget.text() ),
 		"checkbox label", "When null is passed on create text from dom is used in dom" );
 
 } );
@@ -193,13 +194,13 @@ QUnit.test( "label", function( assert ) {
 	checkbox.checkboxradio( "option", "label", "bar" );
 	assert.strictEqual( checkbox.checkboxradio( "option", "label" ),
 		"bar", "When value is passed value is used for option" );
-	assert.strictEqual( $.trim( widget.text() ),
+	assert.strictEqual( String.prototype.trim.call( widget.text() ),
 		"bar", "When value is passed value is used in dom" );
 
 	checkbox.checkboxradio( "option", "label", null );
 	assert.strictEqual( checkbox.checkboxradio( "option", "label" ),
 		"bar", "When null is passed text from dom is used for option" );
-	assert.strictEqual( $.trim( widget.text() ),
+	assert.strictEqual( String.prototype.trim.call( widget.text() ),
 		"bar", "When null is passed text from dom is used in dom" );
 } );
 

@@ -1,14 +1,15 @@
 define( [
 	"qunit",
 	"jquery",
+	"lib/helper",
 	"ui/widgets/controlgroup",
 	"ui/widgets/checkboxradio",
 	"ui/widgets/selectmenu",
 	"ui/widgets/button",
 	"ui/widgets/spinner"
-], function( QUnit, $ ) {
+], function( QUnit, $, helper ) {
 
-QUnit.module( "Controlgroup: Core" );
+QUnit.module( "Controlgroup: Core", { afterEach: helper.moduleAfterEach }  );
 
 QUnit.test( "selectmenu: open/close corners", function( assert ) {
 	assert.expect( 12 );
@@ -98,6 +99,103 @@ QUnit.test( "_resolveClassesValues", function( assert ) {
 	assertSanatized( assert, "ui-corner-bottom ui-corner-left bar", "bar", "Multiple corner classes removed beginning" );
 	assertSanatized( assert, "bar ui-corner-bottom ui-corner-left foo", "bar foo", "Multiple corner class removed middle" );
 	assertSanatized( assert, "bar", "bar", "No corner classes" );
+} );
+
+QUnit.test( "Single controlgroup select - horizontal", function( assert ) {
+	assert.expect( 4 );
+	var group = $( ".controlgroup-single-select" ).controlgroup();
+	var select = group.find( ".ui-selectmenu-button" );
+
+	assert.hasClasses( select, "ui-corner-all" );
+	assert.lacksClasses( select,
+		"ui-corner-left ui-corner-right ui-corner-top ui-corner-left" +
+		" ui-corner-tr ui-corner-tl ui-corner-bl ui corner-br" );
+
+	group.find( "select" ).selectmenu( "open" );
+	assert.hasClasses( select, "ui-corner-top" );
+	assert.lacksClasses( select,
+		"ui-corner-left ui-corner-right ui-corner-all ui-corner-left" +
+		" ui-corner-tr ui-corner-tl ui-corner-bl ui corner-br" );
+} );
+
+QUnit.test( "Single controlgroup select - vertical", function( assert ) {
+	assert.expect( 4 );
+	var group = $( ".controlgroup-single-select" ).controlgroup( {
+		direction: "verticle"
+	} );
+	var select = group.find( ".ui-selectmenu-button" );
+
+	assert.hasClasses( select, "ui-corner-all" );
+	assert.lacksClasses( select,
+		"ui-corner-left ui-corner-right ui-corner-top ui-corner-left" +
+		" ui-corner-tr ui-corner-tl ui-corner-bl ui corner-br" );
+
+	group.find( "select" ).selectmenu( "open" );
+	assert.hasClasses( select, "ui-corner-top" );
+	assert.lacksClasses( select,
+		"ui-corner-left ui-corner-right ui-corner-all ui-corner-left" +
+		" ui-corner-tr ui-corner-tl ui-corner-bl ui corner-br" );
+} );
+
+QUnit.test( "Single controlgroup button - horizontal", function( assert ) {
+	assert.expect( 2 );
+	var group = $( ".controlgroup-single-button" ).controlgroup();
+	var button = group.find( "button" );
+
+	assert.hasClasses( button, "ui-corner-all" );
+	assert.lacksClasses( button,
+		"ui-corner-left ui-corner-right ui-corner-top ui-corner-left" +
+		" ui-corner-tr ui-corner-tl ui-corner-bl ui corner-br" );
+} );
+
+QUnit.test( "Single controlgroup button - vertical", function( assert ) {
+	assert.expect( 2 );
+	var group = $( ".controlgroup-single-button" ).controlgroup( {
+		direction: "verticle"
+	} );
+	var button = group.find( "button" );
+
+	assert.hasClasses( button, "ui-corner-all" );
+	assert.lacksClasses( button,
+		"ui-corner-left ui-corner-right ui-corner-top ui-corner-left" +
+		" ui-corner-tr ui-corner-tl ui-corner-bl ui corner-br" );
+} );
+
+QUnit.module( "Controlgroup: Non-empty class key", {
+	beforeEach: function() {
+		this.classKey = $.ui.selectmenu.prototype.options.classes[ "ui-selectmenu-button-closed" ];
+		$.ui.selectmenu.prototype.options.classes[ "ui-selectmenu-button-closed" ] =
+			"something-custom";
+	},
+	afterEach: function() {
+		$.ui.selectmenu.prototype.options.classes[ "ui-selectmenu-button-closed" ] = this.classKey;
+	}
+} );
+
+QUnit.test( "Controlgroup instantiates child widgets with correct options", function( assert ) {
+	assert.expect( 1 );
+
+	$( ".controlgroup-class-key-init" ).controlgroup();
+
+	assert.hasClasses( $( "#class-key-init-child" ).next(), "something-custom" );
+} );
+
+QUnit.test( "Controlgroup correctly assigns child widget classes options key", function( assert ) {
+	assert.expect( 2 );
+
+	$( ".controlgroup-class-key-dupe" ).controlgroup();
+
+	assert.strictEqual(
+		( $( "#class-key-dupe-first" )
+			.selectmenu( "option", "classes.ui-selectmenu-button-closed" )
+			.match( /something-custom/g ) || [] ).length, 1,
+		"Class 'something-custom' appears exactly once in the first widget's class key value" );
+
+	assert.strictEqual(
+		( $( "#class-key-dupe-second" )
+			.selectmenu( "option", "classes.ui-selectmenu-button-closed" )
+			.match( /something-custom/g ) || [] ).length, 1,
+		"Class 'something-custom' appears exactly once in the second widget's class key value" );
 } );
 
 } );
