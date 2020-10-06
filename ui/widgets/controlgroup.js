@@ -1,5 +1,5 @@
 /*!
- * jQuery UI Controlgroup @VERSION
+ * jQuery UI Controlgroup 1.13.0-zap.pre
  * http://jqueryui.com
  *
  * Copyright jQuery Foundation and other contributors
@@ -33,7 +33,7 @@
 var controlgroupCornerRegex = /ui-corner-([a-z]){2,6}/g;
 
 return $.widget( "ui.controlgroup", {
-	version: "@VERSION",
+	version: "1.13.0-zap.pre",
 	defaultElement: "<div>",
 	options: {
 		direction: "horizontal",

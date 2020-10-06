@@ -12,6 +12,6 @@
 
 $.ui = $.ui || {};
 
-return $.ui.version = "@VERSION";
+return $.ui.version = "1.13.0-zap.pre";
 
 } ) );
