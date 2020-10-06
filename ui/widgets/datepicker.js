@@ -591,7 +591,9 @@ $.extend( Datepicker.prototype, {
 	 */
 	_getDateDatepicker: function( target, noDefault ) {
 		var inst = this._getInst( target );
-		if ( inst && !inst.inline ) {
+
+		// ZAP: Fixed an issue in the jquery datePicker where the input field’s value was being used to determine the selected yeah which was causing issues when the format was set to two digit century.
+		if ( inst && !inst.inline && !$( target ).prop( "readonly" ) ) {
 			this._setDateFromField( inst, noDefault );
 		}
 		return ( inst ? this._getDate( inst ) : null );
@@ -723,7 +725,10 @@ $.extend( Datepicker.prototype, {
 					$.datepicker._getFormatConfig( inst ) );
 
 				if ( date ) { // only if valid
-					$.datepicker._setDateFromField( inst );
+					 // ZAP: Added readonly checks on the date pickers input field around all _setDateFromField calls to avoid setting the wrong century
+					if ( !$( event.target ).prop( "readonly" ) ) {
+						$.datepicker._setDateFromField( inst );
+					}
 					$.datepicker._updateAlternate( inst );
 					$.datepicker._updateDatepicker( inst );
 				}
@@ -769,7 +774,11 @@ $.extend( Datepicker.prototype, {
 
 		inst.lastVal = null;
 		$.datepicker._lastInput = input;
-		$.datepicker._setDateFromField( inst );
+
+		// ZAP: Added readonly checks on the date pickers input field around all _setDateFromField calls to avoid setting the wrong century
+		if ( !$( input ).prop( "readonly" ) ) {
+			$.datepicker._setDateFromField( inst );
+		}
 
 		if ( $.datepicker._inDialog ) { // hide cursor
 			input.value = "";

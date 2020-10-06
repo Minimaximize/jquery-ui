@@ -66,7 +66,10 @@ return $.widget( "ui.mouse", {
 		if ( this._mouseMoveDelegate ) {
 			this.document
 				.off( "mousemove." + this.widgetName, this._mouseMoveDelegate )
-				.off( "mouseup." + this.widgetName, this._mouseUpDelegate );
+				.off( "mouseup." + this.widgetName, this._mouseUpDelegate )
+
+				//ZAP: Add delegate for mouse enter
+				.off( "mouseenter." + this.widgetName, this._mouseEnterDelegate );
 		}
 	},
 
@@ -85,15 +88,20 @@ return $.widget( "ui.mouse", {
 		this._mouseDownEvent = event;
 
 		var that = this,
-			btnIsLeft = ( event.which === 1 ),
+
+			// ZAP: Modified to allow right-click dragging
+			btnIsLeft = true, // ( event.which === 1 ),
 
 			// event.target.nodeName works around a bug in IE 8 with
 			// disabled inputs (#7620)
 			elIsCancel = ( typeof this.options.cancel === "string" && event.target.nodeName ?
 				$( event.target ).closest( this.options.cancel ).length : false );
-		if ( !btnIsLeft || elIsCancel || !this._mouseCapture( event ) ) {
+		if ( !btnIsLeft || elIsCancel || !this._mouseCapture( event ) || this.mouseButtonIsHeld ) {
 			return true;
 		}
+
+		// ZAP: Prevent holding both left and right button at the same time
+		this.mouseButtonIsHeld = true;
 
 		this.mouseDelayMet = !this.options.delay;
 		if ( !this.mouseDelayMet ) {
@@ -123,9 +131,17 @@ return $.widget( "ui.mouse", {
 			return that._mouseUp( event );
 		};
 
+		// Zap: add delegate for mouse enter
+		this._mouseEnterDelegate = function( event ) {
+			that._mouseJustEntered = true;
+		};
+
 		this.document
 			.on( "mousemove." + this.widgetName, this._mouseMoveDelegate )
-			.on( "mouseup." + this.widgetName, this._mouseUpDelegate );
+			.on( "mouseup." + this.widgetName, this._mouseUpDelegate )
+
+			// ZAP: add delegate for mouse enter
+			.on( "mouseenter." + this.widgetName, this._mouseEnterDelegate );
 
 		event.preventDefault();
 
@@ -142,8 +158,10 @@ return $.widget( "ui.mouse", {
 		if ( this._mouseMoved ) {
 
 			// IE mouseup check - mouseup happened when mouse was out of window
-			if ( $.ui.ie && ( !document.documentMode || document.documentMode < 9 ) &&
+			if ( this._mouseJustEntered &&
+					$.ui.ie && ( !document.documentMode || document.documentMode < 9 ) &&
 					!event.button ) {
+				this._mouseJustEntered = false;
 				return this._mouseUp( event );
 
 			// Iframe mouseup check - mouseup occurred in another document
@@ -180,9 +198,14 @@ return $.widget( "ui.mouse", {
 	},
 
 	_mouseUp: function( event ) {
+		this.mouseButtonIsHeld = false;
+
 		this.document
 			.off( "mousemove." + this.widgetName, this._mouseMoveDelegate )
-			.off( "mouseup." + this.widgetName, this._mouseUpDelegate );
+			.off( "mouseup." + this.widgetName, this._mouseUpDelegate )
+
+			//ZAP: add delegate for mouse enter
+			.off( "mouseenter." + this.widgetName, this._mouseEnterDelegate );
 
 		if ( this._mouseStarted ) {
 			this._mouseStarted = false;

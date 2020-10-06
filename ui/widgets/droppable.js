@@ -192,8 +192,8 @@ $.widget( "ui.droppable", {
 			.not( ".ui-draggable-dragging" )
 			.each( function() {
 				var inst = $( this ).droppable( "instance" );
-				if (
-					inst.options.greedy &&
+				if ( // soxtoby change - added greedyDrop option
+					( inst.options.greedy || inst.options.greedyDrop ) &&
 					!inst.options.disabled &&
 					inst.options.scope === draggable.options.scope &&
 					inst.accept.call(
@@ -264,6 +264,10 @@ $.ui.intersect = ( function() {
 			return false;
 		}
 
+		// ZAP: Update jQuery-ui to support 'topmostOnly' option
+		var topmostOnly = droppable.options ? droppable.options.topmostOnly : false;
+		var hitTest = false;
+
 		var x1 = ( draggable.positionAbs ||
 				draggable.position.absolute ).left + draggable.margins.left,
 			y1 = ( draggable.positionAbs ||
@@ -277,17 +281,20 @@ $.ui.intersect = ( function() {
 
 		switch ( toleranceMode ) {
 		case "fit":
-			return ( l <= x1 && x2 <= r && t <= y1 && y2 <= b );
+			hitTest = ( l <= x1 && x2 <= r && t <= y1 && y2 <= b );
+			break;
 		case "intersect":
-			return ( l < x1 + ( draggable.helperProportions.width / 2 ) && // Right Half
+			hitTest = ( l < x1 + ( draggable.helperProportions.width / 2 ) && // Right Half
 				x2 - ( draggable.helperProportions.width / 2 ) < r && // Left Half
 				t < y1 + ( draggable.helperProportions.height / 2 ) && // Bottom Half
 				y2 - ( draggable.helperProportions.height / 2 ) < b ); // Top Half
+				break;
 		case "pointer":
-			return isOverAxis( event.pageY, t, droppable.proportions().height ) &&
+			hitTest = isOverAxis( event.pageY, t, droppable.proportions().height ) &&
 				isOverAxis( event.pageX, l, droppable.proportions().width );
+			break;
 		case "touch":
-			return (
+			hitTest = ( (
 				( y1 >= t && y1 <= b ) || // Top edge touching
 				( y2 >= t && y2 <= b ) || // Bottom edge touching
 				( y1 < t && y2 > b ) // Surrounded vertically
@@ -295,10 +302,51 @@ $.ui.intersect = ( function() {
 				( x1 >= l && x1 <= r ) || // Left edge touching
 				( x2 >= l && x2 <= r ) || // Right edge touching
 				( x1 < l && x2 > r ) // Surrounded horizontally
-			);
+			) );
+			break;
 		default:
-			return false;
+			break;
 		}
+
+			// ZAP: Update jQuery-ui to support 'topmostOnly' option
+			// early exit?
+			// if we've already failed at this point, don't bother checking any further.
+			if ( !hitTest ) { return false; }
+
+			// if we don't care about only returning the topmost, just return now
+			if ( !topmostOnly ) { return hitTest; }
+
+			// okay, we've hit this element but we don't know if it's the topmost element
+			var pointerLeft = ( ( draggable.positionAbs || draggable.position.absolute ).left +
+								( draggable.clickOffset || draggable.offset.click ).left ),
+				pointerTop = ( ( draggable.positionAbs || draggable.position.absolute ).top +
+								( draggable.clickOffset || draggable.offset.click ).top );
+
+			// we need to temporarily hide the drag helper, as it's going to be in the way
+			// of any droppable
+			var restoreDisplay = draggable.helper.css( "display" );
+			draggable.helper.css( "display", "none" );
+			var elementAtPoint = $( document.elementFromPoint( pointerLeft, pointerTop ) );
+			draggable.helper.css( "display", restoreDisplay );
+
+			// NOTE: this is a bit weird. in some cases, elementFromPoint returns the actual
+			// element, and in some cases (notably elements contained within TD cells) it returns
+			// the containing cell. Sometimes it returns random things nearby, and sometimes
+			// (but rarely) it actually gets it right. We limit ourselves to elements that pass the
+			// hit test above, then we just have our best guess. Wonderful :p  -andrewh 27/4/10
+
+			// is this element contained by the droppable that we're looking for?
+			var closestDroppable = elementAtPoint.closest( ".ui-droppable" )[ 0 ];
+			if ( closestDroppable === droppable.element[ 0 ] ) { return true; }
+
+			// does this element (that we've already established passes the hit test) *contain*
+			// the droppable that we're looking for?
+			var container = closestDroppable ? closestDroppable : elementAtPoint;
+			var containedDroppables = $( ".ui-droppable", container );
+
+			return containedDroppables.get().some( function( contained ) {
+				return contained === droppable.element[ 0 ];
+			} );
 	};
 } )();
 
@@ -314,6 +362,9 @@ $.ui.ddmanager = {
 			m = $.ui.ddmanager.droppables[ t.options.scope ] || [],
 			type = event ? event.type : null, // workaround for #2317
 			list = ( t.currentItem || t.element ).find( ":data(ui-droppable)" ).addBack();
+
+		// ZAP: sleigh modification: Do all the activations later, to avoid of the DOM in the loop.
+		var droppablesToActivate = [];
 
 		droppablesLoop: for ( i = 0; i < m.length; i++ ) {
 
@@ -331,14 +382,19 @@ $.ui.ddmanager = {
 				}
 			}
 
-			m[ i ].visible = m[ i ].element.css( "display" ) !== "none";
+			// ZAP: soxtoby modification: changed css("display") != "none" to is(':visible')
+			// cus it works better and catches visibility: none
+			m[ i ].visible = m[ i ].element.is( ":visible" );
 			if ( !m[ i ].visible ) {
 				continue;
 			}
 
 			// Activate the droppable if used directly from draggables
 			if ( type === "mousedown" ) {
-				m[ i ]._activate.call( m[ i ], event );
+
+				// ZAP: Fixed missing member drag/drop whcih I broke mere hours ago.
+				// Kept performance pretty high on missing members drag/dropn with other fixes
+				droppablesToActivate.push( m[ i ] );
 			}
 
 			m[ i ].offset = m[ i ].element.offset();
@@ -347,6 +403,11 @@ $.ui.ddmanager = {
 				height: m[ i ].element[ 0 ].offsetHeight
 			} );
 
+		}
+
+		// Activate the droppable if used directly from draggables
+		for ( j = 0; j < droppablesToActivate.length; j++ ) {
+			droppablesToActivate[ j ]._activate.call( droppablesToActivate[ j ], event );
 		}
 
 	},
